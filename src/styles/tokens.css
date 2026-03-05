@@ -1,0 +1,45 @@
+:root {
+  /* Roshar colour palette */
+  --color-void: #0a0e1a;
+  --color-deep-storm: #0d1526;
+  --color-storm: #1a2540;
+  --color-storm-mid: #253354;
+  --color-storm-light: #2e4070;
+  --color-mist: #4a5a7a;
+  --color-fog: #7a8faa;
+  --color-pale: #c8d4e8;
+  --color-white: #f0f4fc;
+
+  /* Gold/amber accents */
+  --color-gold: #c8a440;
+  --color-gold-bright: #e8c060;
+  --color-gold-dim: #7a6020;
+  --color-amber: #d4780a;
+
+  /* Stormlight / Investiture */
+  --color-stormlight: #a0d8f0;
+  --color-stormlight-glow: #60b8e8;
+  --color-stormlight-bright: #d0f0ff;
+
+  /* Status colours */
+  --color-health: #e05050;
+  --color-health-low: #c02020;
+  --color-focus: #4090d0;
+  --color-investiture: #a0d8f0;
+  --color-danger: #d04040;
+  --color-warn: #d08030;
+  --color-ok: #40a060;
+
+  /* Derived field indicator */
+  --color-derived-bg: rgba(160, 216, 240, 0.08);
+  --color-derived-border: rgba(160, 216, 240, 0.25);
+
+  /* Typography */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Spacing */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+}

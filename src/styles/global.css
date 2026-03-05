@@ -1,0 +1,69 @@
+@import './tokens.css';
+@import 'tailwindcss';
+
+@theme {
+  --color-void: var(--color-void);
+  --color-deep-storm: var(--color-deep-storm);
+  --color-storm: var(--color-storm);
+  --color-storm-mid: var(--color-storm-mid);
+  --color-storm-light: var(--color-storm-light);
+  --color-mist: var(--color-mist);
+  --color-fog: var(--color-fog);
+  --color-pale: var(--color-pale);
+  --color-gold: var(--color-gold);
+  --color-gold-bright: var(--color-gold-bright);
+  --color-gold-dim: var(--color-gold-dim);
+  --color-amber: var(--color-amber);
+  --color-stormlight: var(--color-stormlight);
+  --color-stormlight-glow: var(--color-stormlight-glow);
+  --color-health: var(--color-health);
+  --color-focus: var(--color-focus);
+  --color-investiture: var(--color-investiture);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-pale);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-width: 1280px;
+}
+
+/* Derived/auto-calculated fields */
+.derived-field {
+  background-color: var(--color-derived-bg);
+  border: 1px solid var(--color-derived-border);
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+/* Stormlight glow effect for Radiant/Investiture elements */
+.stormlight-glow {
+  box-shadow: 0 0 8px rgba(160, 216, 240, 0.4), 0 0 24px rgba(96, 184, 232, 0.15);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-deep-storm);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-storm-light);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-mist);
+}
