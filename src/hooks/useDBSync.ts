@@ -9,10 +9,14 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { create } from 'zustand'
 import { useCharacterStore } from '@/store/characterStore'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useAdversaryStore } from '@/store/adversaryStore'
 import { useCombatStore } from '@/store/combatStore'
+
+/** True once the initial IndexedDB bootstrap has finished. */
+export const useDBReady = create<{ ready: boolean }>()(() => ({ ready: false }))
 import {
   loadAllCharacters,
   loadAllCampaigns,
@@ -71,6 +75,8 @@ export function useDBSync() {
         }
       } catch (err) {
         console.error('[DB bootstrap error]', err)
+      } finally {
+        useDBReady.setState({ ready: true })
       }
     }
 

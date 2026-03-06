@@ -93,7 +93,13 @@ export function GMDashboard() {
             </Button>
           )}
 
-          <Button variant="secondary" size="sm" onClick={handleAddCharacter}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleAddCharacter}
+            disabled={!sessionCode}
+            title={!sessionCode ? 'Start a session first' : undefined}
+          >
             + Add Character
           </Button>
           {campaign && (
@@ -139,7 +145,12 @@ export function GMDashboard() {
                 <p className="text-sm mb-4" style={{ color: 'var(--color-fog)' }}>
                   No characters in the campaign yet.
                 </p>
-                <Button variant="primary" onClick={handleAddCharacter}>
+                <Button
+                  variant="primary"
+                  onClick={handleAddCharacter}
+                  disabled={!sessionCode}
+                  title={!sessionCode ? 'Start a session first' : undefined}
+                >
                   Create First Character
                 </Button>
               </div>
