@@ -7,6 +7,8 @@ export interface LevelUpChoices {
   attributeIncrease?: AttributeKey
   /** Skill rank allocations: skillId → number of ranks to add */
   skillRanks: Record<string, number>
+  /** If selecting from a heroic path tree, the canonical tree node id */
+  selectedTalentId?: string
   /** Talent name/description (free text for v1) */
   talentName?: string
   talentDescription?: string
@@ -88,7 +90,7 @@ export function applyLevelUp(character: Character, choices: LevelUpChoices): Cha
   // Talent
   if (choices.talentName) {
     updated.talents.push({
-      id: `talent-${Date.now()}`,
+      id: choices.selectedTalentId ?? `talent-${Date.now()}`,
       name: choices.talentName,
       source: choices.talentSource ?? 'level',
       activationType: (choices.talentActivationType ?? 'always-active') as

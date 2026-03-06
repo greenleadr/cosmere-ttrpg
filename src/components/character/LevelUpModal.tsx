@@ -5,6 +5,8 @@ import { validateLevelUpChoices, applyLevelUp } from '@/engine/levelUpEngine'
 import { getAdvancementRow } from '@/constants/advancement'
 import { ATTRIBUTES } from '@/constants/attributes'
 import { SKILLS } from '@/constants/skills'
+import { HEROIC_PATH_TREES } from '@/constants/talentTrees'
+import type { TalentNode } from '@/constants/talentTrees'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { Input, Textarea } from '@/components/ui/Input'
@@ -220,87 +222,12 @@ export function LevelUpModal({ open, character, onClose, onApply }: LevelUpModal
         {step === 'talent' && (
           <div className="flex flex-col gap-3">
             {advancement.talentsGained > 0 ? (
-              <>
-                <p className="text-sm" style={{ color: 'var(--color-fog)' }}>
-                  You gain a talent. Describe it below (you can fill in details later).
-                </p>
-                <Input
-                  label="Talent Name"
-                  value={choices.talentName ?? ''}
-                  onChange={v => setChoices(c => ({ ...c, talentName: v }))}
-                  placeholder="e.g. Stormblessed Reflexes"
-                />
-                <Textarea
-                  label="Description"
-                  value={choices.talentDescription ?? ''}
-                  onChange={v => setChoices(c => ({ ...c, talentDescription: v }))}
-                  placeholder="When you take the Dodge action…"
-                  rows={3}
-                />
-                <div className="flex gap-2">
-                  <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-xs font-medium" style={{ color: 'var(--color-fog)' }}>
-                      Activation
-                    </label>
-                    <select
-                      value={choices.talentActivationType ?? 'always-active'}
-                      onChange={e => setChoices(c => ({ ...c, talentActivationType: e.target.value }))}
-                      className="text-sm rounded px-2 py-1.5"
-                      style={{
-                        background: 'var(--color-storm)',
-                        border: '1px solid var(--color-storm-light)',
-                        color: 'var(--color-pale)',
-                      }}
-                    >
-                      <option value="always-active">Always Active</option>
-                      <option value="action">Action</option>
-                      <option value="reaction">Reaction</option>
-                      <option value="free-action">Free Action</option>
-                      <option value="special">Special</option>
-                    </select>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1">
-                    <label className="text-xs font-medium" style={{ color: 'var(--color-fog)' }}>
-                      Source
-                    </label>
-                    <input
-                      type="text"
-                      value={choices.talentSource ?? 'level'}
-                      onChange={e => setChoices(c => ({ ...c, talentSource: e.target.value }))}
-                      className="text-sm rounded px-2.5 py-1.5"
-                      style={{
-                        background: 'var(--color-storm)',
-                        border: '1px solid var(--color-storm-light)',
-                        color: 'var(--color-pale)',
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {advancement.ancestryBonusTalent && (
-                  <div
-                    className="p-3 rounded mt-2"
-                    style={{ background: 'var(--color-storm)', border: '1px solid var(--color-gold)' }}
-                  >
-                    <p className="text-xs font-bold mb-2" style={{ color: 'var(--color-gold)' }}>
-                      Ancestry Bonus Talent
-                    </p>
-                    <Input
-                      label="Ancestry Talent Name"
-                      value={choices.ancestryBonusTalentName ?? ''}
-                      onChange={v => setChoices(c => ({ ...c, ancestryBonusTalentName: v }))}
-                    />
-                    <div className="mt-2">
-                      <Textarea
-                        label="Description"
-                        value={choices.ancestryBonusTalentDescription ?? ''}
-                        onChange={v => setChoices(c => ({ ...c, ancestryBonusTalentDescription: v }))}
-                        rows={2}
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
+              <TalentStepContent
+                character={character}
+                choices={choices}
+                setChoices={setChoices}
+                ancestryBonusTalent={advancement.ancestryBonusTalent}
+              />
             ) : (
               <p className="text-sm" style={{ color: 'var(--color-fog)' }}>
                 No talent gained at this level.
@@ -365,6 +292,289 @@ export function LevelUpModal({ open, character, onClose, onApply }: LevelUpModal
     </Modal>
   )
 }
+
+// ─── Talent step sub-component ───────────────────────────────────────────────
+
+const ACTIVATION_LABELS: Record<string, string> = {
+  'action': 'Action',
+  'reaction': 'Reaction',
+  'free-action': 'Free Action',
+  'always-active': 'Passive',
+  'special': 'Special',
+}
+
+function TreeTalentCard({
+  talent,
+  isAcquired,
+  isSelected,
+  prerequisitesMet,
+  onSelect,
+}: {
+  talent: TalentNode
+  isAcquired: boolean
+  isSelected: boolean
+  prerequisitesMet: boolean
+  onSelect: () => void
+}) {
+  const dim = !isSelected && !prerequisitesMet && !isAcquired
+  const disabled = isAcquired
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onSelect}
+      className="w-full text-left rounded p-3 flex flex-col gap-1 transition-all"
+      style={{
+        background: isSelected
+          ? 'rgba(212,160,23,0.18)'
+          : isAcquired
+            ? 'rgba(255,255,255,0.04)'
+            : 'var(--color-storm)',
+        border: `1px solid ${isSelected ? 'var(--color-gold)' : isAcquired ? 'var(--color-storm-mid)' : 'var(--color-storm-light)'}`,
+        opacity: dim ? 0.45 : disabled ? 0.5 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+      }}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className="text-sm font-semibold"
+          style={{ color: isSelected ? 'var(--color-gold-bright)' : 'var(--color-pale)' }}
+        >
+          {talent.name}
+        </span>
+        <span
+          className="text-xs px-1.5 py-0.5 rounded shrink-0"
+          style={{ background: 'var(--color-storm-mid)', color: 'var(--color-fog)' }}
+        >
+          {ACTIVATION_LABELS[talent.activationType] ?? talent.activationType}
+        </span>
+      </div>
+      {isAcquired && (
+        <span className="text-xs" style={{ color: 'var(--color-fog)' }}>Already acquired</span>
+      )}
+      {!isAcquired && !prerequisitesMet && (
+        <span className="text-xs" style={{ color: 'var(--color-fog)' }}>
+          Requires: {talent.prerequisites.join(', ')}
+        </span>
+      )}
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--color-pale)', opacity: 0.8 }}>
+        {talent.description}
+      </p>
+      {isSelected && (
+        <div
+          className="mt-1 text-xs font-semibold px-2 py-0.5 rounded self-start"
+          style={{ background: 'var(--color-gold)', color: '#000' }}
+        >
+          Selected ✓
+        </div>
+      )}
+    </button>
+  )
+}
+
+function TalentStepContent({
+  character,
+  choices,
+  setChoices,
+  ancestryBonusTalent,
+}: {
+  character: Character
+  choices: LevelUpChoices
+  setChoices: React.Dispatch<React.SetStateAction<LevelUpChoices>>
+  ancestryBonusTalent: boolean
+}) {
+  const [mode, setMode] = useState<'tree' | 'custom'>(
+    character.heroicPaths.length > 0 ? 'tree' : 'custom',
+  )
+  const [expandedSpecialty, setExpandedSpecialty] = useState<string | null>(null)
+
+  const pathName = character.heroicPaths[0]
+  const tree = pathName ? HEROIC_PATH_TREES[pathName] : null
+  const acquiredIds = new Set(character.talents.map(t => t.id))
+
+  function selectTreeTalent(talent: TalentNode, specialty: string) {
+    const source = tree ? `${tree.pathName} · ${specialty}` : specialty
+    setChoices(c => ({
+      ...c,
+      selectedTalentId: talent.id,
+      talentName: talent.name,
+      talentDescription: talent.description,
+      talentActivationType: talent.activationType,
+      talentSource: source,
+    }))
+  }
+
+  function clearTalent() {
+    setChoices(c => ({
+      ...c,
+      selectedTalentId: undefined,
+      talentName: undefined,
+      talentDescription: undefined,
+      talentActivationType: undefined,
+      talentSource: undefined,
+    }))
+  }
+
+  function prerequisitesMet(talent: TalentNode) {
+    return talent.prerequisites.every(pid => acquiredIds.has(pid))
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Mode switcher */}
+      {tree && (
+        <div className="flex gap-1">
+          {(['tree', 'custom'] as const).map(m => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => { setMode(m); clearTalent() }}
+              className="flex-1 py-1.5 text-sm rounded font-medium transition-colors"
+              style={{
+                background: mode === m ? 'var(--color-gold)' : 'var(--color-storm)',
+                border: `1px solid ${mode === m ? 'var(--color-gold)' : 'var(--color-storm-light)'}`,
+                color: mode === m ? '#000' : 'var(--color-fog)',
+              }}
+            >
+              {m === 'tree' ? `${tree.pathName} Path` : 'Custom / Other'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Tree browser */}
+      {mode === 'tree' && tree && (
+        <div className="flex flex-col gap-3 max-h-80 overflow-y-auto pr-1">
+          {/* Key talent */}
+          <div>
+            <div className="text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--color-gold)' }}>
+              Key Talent
+            </div>
+            <TreeTalentCard
+              talent={tree.keyTalent}
+              isAcquired={acquiredIds.has(tree.keyTalent.id)}
+              isSelected={choices.selectedTalentId === tree.keyTalent.id}
+              prerequisitesMet
+              onSelect={() => selectTreeTalent(tree.keyTalent, 'Key Talent')}
+            />
+          </div>
+
+          {/* Specialties */}
+          {tree.specialties.map(specialty => (
+            <div key={specialty.id}>
+              <button
+                type="button"
+                onClick={() => setExpandedSpecialty(p => p === specialty.id ? null : specialty.id)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded text-sm font-semibold"
+                style={{
+                  background: 'var(--color-deep-storm)',
+                  border: '1px solid var(--color-storm-mid)',
+                  color: 'var(--color-stormlight)',
+                }}
+              >
+                <span>{specialty.name}</span>
+                <span style={{ color: 'var(--color-fog)' }}>
+                  {expandedSpecialty === specialty.id ? '▲' : '▼'}
+                </span>
+              </button>
+              {expandedSpecialty === specialty.id && (
+                <div className="mt-1.5 flex flex-col gap-1.5">
+                  {specialty.talents.map(talent => (
+                    <TreeTalentCard
+                      key={talent.id}
+                      talent={talent}
+                      isAcquired={acquiredIds.has(talent.id)}
+                      isSelected={choices.selectedTalentId === talent.id}
+                      prerequisitesMet={prerequisitesMet(talent)}
+                      onSelect={() => selectTreeTalent(talent, specialty.name)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Custom / free-text form */}
+      {mode === 'custom' && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm" style={{ color: 'var(--color-fog)' }}>
+            Describe a custom talent (ancestry, homebrew, or other).
+          </p>
+          <Input
+            label="Talent Name"
+            value={choices.talentName ?? ''}
+            onChange={v => setChoices(c => ({ ...c, talentName: v, selectedTalentId: undefined }))}
+            placeholder="e.g. Stormblessed Reflexes"
+          />
+          <Textarea
+            label="Description"
+            value={choices.talentDescription ?? ''}
+            onChange={v => setChoices(c => ({ ...c, talentDescription: v }))}
+            placeholder="When you take the Dodge action…"
+            rows={3}
+          />
+          <div className="flex gap-2">
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-xs font-medium" style={{ color: 'var(--color-fog)' }}>Activation</label>
+              <select
+                value={choices.talentActivationType ?? 'always-active'}
+                onChange={e => setChoices(c => ({ ...c, talentActivationType: e.target.value }))}
+                className="text-sm rounded px-2 py-1.5"
+                style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)', color: 'var(--color-pale)' }}
+              >
+                <option value="always-active">Always Active</option>
+                <option value="action">Action</option>
+                <option value="reaction">Reaction</option>
+                <option value="free-action">Free Action</option>
+                <option value="special">Special</option>
+              </select>
+            </div>
+            <div className="flex-1 flex flex-col gap-1">
+              <label className="text-xs font-medium" style={{ color: 'var(--color-fog)' }}>Source</label>
+              <input
+                type="text"
+                value={choices.talentSource ?? 'custom'}
+                onChange={e => setChoices(c => ({ ...c, talentSource: e.target.value }))}
+                className="text-sm rounded px-2.5 py-1.5"
+                style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)', color: 'var(--color-pale)' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ancestry bonus talent */}
+      {ancestryBonusTalent && (
+        <div
+          className="p-3 rounded"
+          style={{ background: 'var(--color-storm)', border: '1px solid var(--color-gold)' }}
+        >
+          <p className="text-xs font-bold mb-2" style={{ color: 'var(--color-gold)' }}>
+            Ancestry Bonus Talent
+          </p>
+          <Input
+            label="Ancestry Talent Name"
+            value={choices.ancestryBonusTalentName ?? ''}
+            onChange={v => setChoices(c => ({ ...c, ancestryBonusTalentName: v }))}
+          />
+          <div className="mt-2">
+            <Textarea
+              label="Description"
+              value={choices.ancestryBonusTalentDescription ?? ''}
+              onChange={v => setChoices(c => ({ ...c, ancestryBonusTalentDescription: v }))}
+              rows={2}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function Pill({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
