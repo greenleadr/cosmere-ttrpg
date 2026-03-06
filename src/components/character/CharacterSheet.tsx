@@ -13,9 +13,10 @@ import { SingerFormPanel } from './SingerFormPanel'
 import { EquipmentPanel } from './EquipmentPanel'
 import { NarrativePanel } from './NarrativePanel'
 import { LevelUpModal } from './LevelUpModal'
+import { CharacterIdentityPanel } from './CharacterIdentityPanel'
 import { Button } from '@/components/ui/Button'
 
-type Tab = 'stats' | 'skills' | 'talents' | 'equipment' | 'narrative'
+type Tab = 'details' | 'stats' | 'skills' | 'talents' | 'equipment' | 'narrative'
 
 interface CharacterSheetProps {
   character: Character
@@ -23,7 +24,7 @@ interface CharacterSheetProps {
 }
 
 export function CharacterSheet({ character, readOnly = false }: CharacterSheetProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('stats')
+  const [activeTab, setActiveTab] = useState<Tab>('details')
   const [levelUpOpen, setLevelUpOpen] = useState(false)
   const derived = useDerivedStats(character)
   const store = useCharacterStore()
@@ -31,6 +32,7 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
   const id = character.id
 
   const tabs: { key: Tab; label: string }[] = [
+    { key: 'details', label: 'Details' },
     { key: 'stats', label: 'Stats' },
     { key: 'skills', label: 'Skills' },
     { key: 'talents', label: 'Talents' },
@@ -109,6 +111,14 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
 
       {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-4">
+        {activeTab === 'details' && (
+          <CharacterIdentityPanel
+            character={character}
+            readOnly={readOnly}
+            onUpdate={updates => store.updateMeta(id, updates)}
+          />
+        )}
+
         {activeTab === 'stats' && (
           <div className="flex flex-col gap-4">
             <DerivedStatsBar derived={derived} />
