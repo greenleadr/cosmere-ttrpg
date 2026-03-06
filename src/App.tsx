@@ -3,11 +3,19 @@ import { CharacterPage } from '@/pages/CharacterPage'
 import { GMPage } from '@/pages/GMPage'
 import { CombatPage } from '@/pages/CombatPage'
 import { AdversaryPage } from '@/pages/AdversaryPage'
+import { SettingsPage } from '@/pages/SettingsPage'
+import { useDBSync } from '@/hooks/useDBSync'
+
+function AppInner() {
+  useDBSync()
+  return null
+}
 
 export function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col h-screen" style={{ background: 'var(--color-void)' }}>
+        <AppInner />
         {/* Top nav */}
         <nav
           className="flex items-center gap-1 px-4 py-2 flex-shrink-0"
@@ -27,6 +35,7 @@ export function App() {
             { to: '/gm', label: 'GM Dashboard' },
             { to: '/combat', label: 'Combat' },
             { to: '/adversaries', label: 'Adversaries' },
+            { to: '/settings', label: 'Settings' },
           ].map(link => (
             <NavLink
               key={link.to}
@@ -55,6 +64,7 @@ export function App() {
             <Route path="/gm" element={<GMPage />} />
             <Route path="/combat" element={<CombatPage />} />
             <Route path="/adversaries" element={<AdversaryPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
       </div>

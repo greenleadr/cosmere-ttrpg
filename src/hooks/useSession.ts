@@ -29,7 +29,6 @@ export function useSession() {
       if (msg.type === 'CHAR_UPDATE') {
         // Apply received character state (GM → player or player → GM)
         const store = useCharacterStore.getState()
-        const existing = store.characters[msg.characterId]
         // Only apply if we don't own this character (role: player) or GM receives from player
         if (role === 'gm' || (role === 'player' && msg.characterId !== useSessionStore.getState().linkedCharacterId)) {
           store.applyUpdatedCharacter(msg.payload)
