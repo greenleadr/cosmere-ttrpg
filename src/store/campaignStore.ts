@@ -3,6 +3,8 @@ import { immer } from 'zustand/middleware/immer'
 import { nanoid } from 'nanoid'
 import type { Campaign, SessionNote } from '@/types/campaign'
 
+const ACTIVE_CAMPAIGN_KEY = 'cosmere-active-campaign'
+
 function createDefaultCampaign(overrides?: Partial<Campaign>): Campaign {
   const now = Date.now()
   return {
@@ -41,13 +43,16 @@ interface CampaignState {
 export const useCampaignStore = create<CampaignState>()(
   immer((set) => ({
     campaigns: {},
-    activeCampaignId: null,
+    activeCampaignId: localStorage.getItem(ACTIVE_CAMPAIGN_KEY) ?? null,
 
     addCampaign: (overrides) => {
       const campaign = createDefaultCampaign(overrides)
       set(state => {
         state.campaigns[campaign.id] = campaign
-        if (!state.activeCampaignId) state.activeCampaignId = campaign.id
+        if (!state.activeCampaignId) {
+          state.activeCampaignId = campaign.id
+          localStorage.setItem(ACTIVE_CAMPAIGN_KEY, campaign.id)
+        }
       })
       return campaign.id
     },
@@ -56,11 +61,17 @@ export const useCampaignStore = create<CampaignState>()(
       delete state.campaigns[id]
       if (state.activeCampaignId === id) {
         const remaining = Object.keys(state.campaigns)
-        state.activeCampaignId = remaining[0] ?? null
+        const next = remaining[0] ?? null
+        state.activeCampaignId = next
+        if (next) localStorage.setItem(ACTIVE_CAMPAIGN_KEY, next)
+        else localStorage.removeItem(ACTIVE_CAMPAIGN_KEY)
       }
     }),
 
-    setActiveCampaign: (id) => set(state => { state.activeCampaignId = id }),
+    setActiveCampaign: (id) => {
+      localStorage.setItem(ACTIVE_CAMPAIGN_KEY, id)
+      set(state => { state.activeCampaignId = id })
+    },
 
     updateCampaign: (id, updates) => set(state => {
       const c = state.campaigns[id]
@@ -118,7 +129,9 @@ export const useCampaignStore = create<CampaignState>()(
         state.campaigns[c.id] = c
       }
       if (!state.activeCampaignId && campaigns.length > 0) {
-        state.activeCampaignId = campaigns[0]!.id
+        const id = campaigns[0]!.id
+        state.activeCampaignId = id
+        localStorage.setItem(ACTIVE_CAMPAIGN_KEY, id)
       }
     }),
   })),

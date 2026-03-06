@@ -16,6 +16,8 @@ import type {
 } from '@/types/character'
 import { SKILLS } from '@/constants/skills'
 
+const ACTIVE_CHAR_KEY = 'cosmere-active-char'
+
 export function createDefaultCharacter(overrides?: Partial<Character>): Character {
   const now = Date.now()
   return {
@@ -134,13 +136,16 @@ interface CharacterState {
 export const useCharacterStore = create<CharacterState>()(
   immer((set) => ({
     characters: {},
-    activeCharacterId: null,
+    activeCharacterId: localStorage.getItem(ACTIVE_CHAR_KEY) ?? null,
 
     addCharacter: (overrides) => {
       const char = createDefaultCharacter(overrides)
       set(state => {
         state.characters[char.id] = char
-        if (!state.activeCharacterId) state.activeCharacterId = char.id
+        if (!state.activeCharacterId) {
+          state.activeCharacterId = char.id
+          localStorage.setItem(ACTIVE_CHAR_KEY, char.id)
+        }
       })
       return char.id
     },
@@ -149,11 +154,17 @@ export const useCharacterStore = create<CharacterState>()(
       delete state.characters[id]
       if (state.activeCharacterId === id) {
         const remaining = Object.keys(state.characters)
-        state.activeCharacterId = remaining[0] ?? null
+        const next = remaining[0] ?? null
+        state.activeCharacterId = next
+        if (next) localStorage.setItem(ACTIVE_CHAR_KEY, next)
+        else localStorage.removeItem(ACTIVE_CHAR_KEY)
       }
     }),
 
-    setActiveCharacter: (id) => set(state => { state.activeCharacterId = id }),
+    setActiveCharacter: (id) => {
+      localStorage.setItem(ACTIVE_CHAR_KEY, id)
+      set(state => { state.activeCharacterId = id })
+    },
 
     updateMeta: (id, updates) => set(state => {
       const c = state.characters[id]
