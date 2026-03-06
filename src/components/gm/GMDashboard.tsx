@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useCharacterStore } from '@/store/characterStore'
 import { useCampaignStore } from '@/store/campaignStore'
+import { useSessionStore } from '@/store/sessionStore'
 import { useDerivedStats } from '@/hooks/useDerivedStats'
 import { CharacterCard } from './CharacterCard'
 import { SessionNotes } from './SessionNotes'
@@ -15,6 +16,7 @@ type GMTab = 'party' | 'notes'
 export function GMDashboard() {
   const { characters, addCharacter, applyUpdatedCharacter } = useCharacterStore()
   const { campaigns, activeCampaignId, addCampaign, addCharacterToCampaign, addSessionNote, updateSessionNote, removeSessionNote } = useCampaignStore()
+  const { role, sessionCode, initGMSession, initSoloMode } = useSessionStore()
   const [activeTab, setActiveTab] = useState<GMTab>('party')
   const [drillDownCharId, setDrillDownCharId] = useState<string | null>(null)
   const [levelUpCharId, setLevelUpCharId] = useState<string | null>(null)
@@ -51,10 +53,10 @@ export function GMDashboard() {
     >
       {/* Header */}
       <div
-        className="px-6 py-4 flex items-center justify-between"
+        className="px-6 py-4 flex items-center justify-between gap-4"
         style={{ background: 'var(--color-deep-storm)', borderBottom: '1px solid var(--color-storm-mid)' }}
       >
-        <div>
+        <div className="min-w-0">
           <h1 className="text-xl font-bold" style={{ color: 'var(--color-gold-bright)' }}>
             GM Dashboard
           </h1>
@@ -62,7 +64,35 @@ export function GMDashboard() {
             {campaign ? campaign.name : 'No active campaign'} · {partyChars.length} character{partyChars.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Session controls */}
+          {role === 'gm' && sessionCode ? (
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded"
+              style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)' }}
+            >
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: '#6bbf6b' }} />
+              <span className="text-xs" style={{ color: 'var(--color-fog)' }}>Code:</span>
+              <span className="text-sm font-mono font-bold" style={{ color: 'var(--color-stormlight)' }}>
+                {sessionCode}
+              </span>
+              <button
+                type="button"
+                onClick={initSoloMode}
+                className="text-xs hover:opacity-80 ml-1"
+                style={{ color: 'var(--color-fog)' }}
+                title="Stop session"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={initGMSession}>
+              ▶ Start Session
+            </Button>
+          )}
+
           <Button variant="secondary" size="sm" onClick={handleAddCharacter}>
             + Add Character
           </Button>

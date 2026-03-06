@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import { useCharacterStore } from '@/store/characterStore'
 import { useCampaignStore } from '@/store/campaignStore'
 import { useAdversaryStore } from '@/store/adversaryStore'
-import { useSessionStore } from '@/store/sessionStore'
 import { buildExportBundle, downloadJSON, parseImportBundle } from '@/utils/exportImport'
 import { Button } from '@/components/ui/Button'
 
@@ -10,14 +9,9 @@ export function SettingsPage() {
   const charStore = useCharacterStore()
   const campaignStore = useCampaignStore()
   const adversaryStore = useAdversaryStore()
-  const { role, sessionCode, initGMSession, initSoloMode, initPlayerSession } = useSessionStore()
 
   const [importError, setImportError] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
-  const [playerCode, setPlayerCode] = useState('')
-  const [playerCharId, setPlayerCharId] = useState(
-    Object.keys(charStore.characters)[0] ?? ''
-  )
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -119,106 +113,6 @@ export function SettingsPage() {
                   ✕ {importError}
                 </p>
               )}
-            </div>
-          </div>
-        </section>
-
-        {/* Session Linking */}
-        <section className="rounded-lg p-5" style={sectionStyle}>
-          <h2 className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-gold)' }}>
-            Session Linking
-          </h2>
-          <p className="text-xs mb-4" style={{ color: 'var(--color-fog)' }}>
-            Link your browser tab to a GM session (same device) using BroadcastChannel. The GM broadcasts all
-            character states; players can see GM-controlled views in their own tab.
-          </p>
-
-          {/* Current role */}
-          <div
-            className="mb-4 px-3 py-2 rounded flex items-center gap-2"
-            style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)' }}
-          >
-            <span className="text-xs" style={{ color: 'var(--color-fog)' }}>Current Role:</span>
-            <span className="text-sm font-bold capitalize" style={{ color: 'var(--color-gold-bright)' }}>
-              {role}
-            </span>
-            {sessionCode && (
-              <>
-                <span className="text-xs" style={{ color: 'var(--color-fog)' }}>· Code:</span>
-                <span className="text-sm font-mono font-bold" style={{ color: 'var(--color-stormlight)' }}>
-                  {sessionCode}
-                </span>
-              </>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {/* Solo mode */}
-            <Button
-              variant={role === 'solo' ? 'primary' : 'ghost'}
-              onClick={initSoloMode}
-            >
-              Solo Mode (no linking)
-            </Button>
-
-            {/* GM mode */}
-            <Button
-              variant={role === 'gm' ? 'primary' : 'secondary'}
-              onClick={initGMSession}
-            >
-              Start GM Session
-            </Button>
-            {role === 'gm' && sessionCode && (
-              <p className="text-xs" style={{ color: 'var(--color-fog)' }}>
-                Share code <strong style={{ color: 'var(--color-stormlight)' }}>{sessionCode}</strong> with
-                players so they can link their tabs.
-              </p>
-            )}
-
-            {/* Player mode */}
-            <div className="flex flex-col gap-2">
-              <p className="text-xs font-medium" style={{ color: 'var(--color-fog)' }}>
-                Join as Player
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <input
-                  type="text"
-                  value={playerCode}
-                  onChange={e => setPlayerCode(e.target.value)}
-                  placeholder="Session code"
-                  className="text-sm rounded px-2.5 py-1.5"
-                  style={{
-                    background: 'var(--color-storm)',
-                    border: '1px solid var(--color-storm-light)',
-                    color: 'var(--color-pale)',
-                    outline: 'none',
-                    width: 120,
-                  }}
-                />
-                <select
-                  value={playerCharId}
-                  onChange={e => setPlayerCharId(e.target.value)}
-                  className="text-sm rounded px-2 py-1.5"
-                  style={{
-                    background: 'var(--color-storm)',
-                    border: '1px solid var(--color-storm-light)',
-                    color: 'var(--color-pale)',
-                    flex: 1,
-                  }}
-                >
-                  {Object.values(charStore.characters).map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={!playerCode.trim() || !playerCharId}
-                  onClick={() => initPlayerSession(playerCode.trim(), playerCharId)}
-                >
-                  Join
-                </Button>
-              </div>
             </div>
           </div>
         </section>
