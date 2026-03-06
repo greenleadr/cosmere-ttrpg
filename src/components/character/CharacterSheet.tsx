@@ -7,6 +7,13 @@ import { DefensePanel } from './DefensePanel'
 import { ResourcePanel } from './ResourcePanel'
 import { DerivedStatsBar } from './DerivedStatsBar'
 import { SkillsPanel } from './SkillsPanel'
+import { ConditionTracker } from './ConditionTracker'
+import { InjuryLog } from './InjuryLog'
+import { SingerFormPanel } from './SingerFormPanel'
+import { EquipmentPanel } from './EquipmentPanel'
+import { NarrativePanel } from './NarrativePanel'
+import { LevelUpModal } from './LevelUpModal'
+import { Button } from '@/components/ui/Button'
 
 type Tab = 'stats' | 'skills' | 'talents' | 'equipment' | 'narrative'
 
@@ -17,6 +24,7 @@ interface CharacterSheetProps {
 
 export function CharacterSheet({ character, readOnly = false }: CharacterSheetProps) {
   const [activeTab, setActiveTab] = useState<Tab>('stats')
+  const [levelUpOpen, setLevelUpOpen] = useState(false)
   const derived = useDerivedStats(character)
   const store = useCharacterStore()
 
@@ -56,18 +64,25 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
             {character.isRadiant && character.radiantPath && ` · ${character.radiantPath}`}
           </p>
         </div>
-        {readOnly && (
-          <span
-            className="text-xs px-2 py-1 rounded"
-            style={{
-              background: 'var(--color-storm-mid)',
-              border: '1px solid var(--color-storm-light)',
-              color: 'var(--color-fog)',
-            }}
-          >
-            View Only
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {!readOnly && (
+            <Button variant="secondary" size="sm" onClick={() => setLevelUpOpen(true)}>
+              Level Up
+            </Button>
+          )}
+          {readOnly && (
+            <span
+              className="text-xs px-2 py-1 rounded"
+              style={{
+                background: 'var(--color-storm-mid)',
+                border: '1px solid var(--color-storm-light)',
+                color: 'var(--color-fog)',
+              }}
+            >
+              View Only
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -121,6 +136,37 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
                 />
               </div>
             </div>
+
+            <ConditionTracker
+              activeConditions={character.activeConditions}
+              readOnly={readOnly}
+              onToggle={conditionId => {
+                if (character.activeConditions.some(c => c.conditionId === conditionId)) {
+                  store.removeCondition(id, conditionId)
+                } else {
+                  store.addCondition(id, { conditionId })
+                }
+              }}
+              onExhaustedStackChange={stacks => store.updateExhaustedStacks(id, stacks)}
+            />
+
+            <InjuryLog
+              injuries={character.injuries}
+              readOnly={readOnly}
+              onAdd={injury => store.addInjury(id, injury)}
+              onRemove={injuryId => store.removeInjury(id, injuryId)}
+              onUpdate={(injuryId, updates) => store.updateInjury(id, injuryId, updates)}
+            />
+
+            {character.ancestry === 'Singer' && (
+              <SingerFormPanel
+                activeSingerForm={character.activeSingerForm}
+                baseAttributes={character.attributes}
+                effectiveAttributes={derived.effectiveAttributes}
+                readOnly={readOnly}
+                onFormChange={formId => store.setSingerForm(id, formId)}
+              />
+            )}
           </div>
         )}
 
@@ -136,94 +182,170 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
         )}
 
         {activeTab === 'talents' && (
-          <div
-            className="rounded-lg p-4"
-            style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-gold)' }}>
-              Talents
-            </h3>
-            {character.talents.length === 0 ? (
-              <p className="text-sm" style={{ color: 'var(--color-fog)' }}>No talents recorded.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {character.talents.map(t => (
-                  <div
-                    key={t.id}
-                    className="p-3 rounded"
-                    style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)' }}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm" style={{ color: 'var(--color-gold-bright)' }}>
-                        {t.name}
-                      </span>
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded"
-                        style={{ background: 'var(--color-storm-mid)', color: 'var(--color-fog)' }}
-                      >
-                        {t.activationType}
-                      </span>
-                      {t.source && (
-                        <span className="text-xs" style={{ color: 'var(--color-fog)' }}>
-                          {t.source}
+          <div className="flex flex-col gap-4">
+            <div
+              className="rounded-lg p-4"
+              style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--color-gold)' }}>
+                  Talents
+                </h3>
+                {!readOnly && (
+                  <Button variant="ghost" size="sm" onClick={() => setLevelUpOpen(true)}>
+                    Level Up to Add
+                  </Button>
+                )}
+              </div>
+              {character.talents.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--color-fog)' }}>No talents recorded.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {character.talents.map(t => (
+                    <div
+                      key={t.id}
+                      className="p-3 rounded"
+                      style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)' }}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm" style={{ color: 'var(--color-gold-bright)' }}>
+                          {t.name}
                         </span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded"
+                          style={{ background: 'var(--color-storm-mid)', color: 'var(--color-fog)' }}
+                        >
+                          {t.activationType}
+                        </span>
+                        {t.source && (
+                          <span className="text-xs" style={{ color: 'var(--color-fog)' }}>
+                            {t.source}
+                          </span>
+                        )}
+                      </div>
+                      {t.prerequisites && (
+                        <p className="text-xs mb-1" style={{ color: 'var(--color-fog)' }}>
+                          Prerequisites: {t.prerequisites}
+                        </p>
+                      )}
+                      {t.description && (
+                        <p className="text-xs" style={{ color: 'var(--color-pale)' }}>
+                          {t.description}
+                        </p>
+                      )}
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => store.removeTalent(id, t.id)}
+                          className="mt-2 text-xs hover:opacity-80"
+                          style={{ color: 'var(--color-health)' }}
+                        >
+                          Remove
+                        </button>
                       )}
                     </div>
-                    {t.prerequisites && (
-                      <p className="text-xs mb-1" style={{ color: 'var(--color-fog)' }}>
-                        Prerequisites: {t.prerequisites}
-                      </p>
-                    )}
-                    {t.description && (
-                      <p className="text-xs" style={{ color: 'var(--color-pale)' }}>
-                        {t.description}
-                      </p>
-                    )}
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => store.removeTalent(id, t.id)}
-                        className="mt-2 text-xs hover:opacity-80"
-                        style={{ color: 'var(--color-health)' }}
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Expertises */}
+            <div
+              className="rounded-lg p-4"
+              style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
+            >
+              <h3 className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-gold)' }}>
+                Expertises
+              </h3>
+              {!readOnly && (
+                <form
+                  className="flex gap-2 mb-3"
+                  onSubmit={e => {
+                    e.preventDefault()
+                    const input = (e.currentTarget.elements.namedItem('text') as HTMLInputElement)
+                    if (!input.value.trim()) return
+                    store.addExpertise(id, { text: input.value.trim(), note: '' })
+                    input.value = ''
+                  }}
+                >
+                  <input
+                    name="text"
+                    type="text"
+                    placeholder="Add expertise…"
+                    className="flex-1 text-sm rounded px-2.5 py-1.5"
+                    style={{
+                      background: 'var(--color-storm)',
+                      border: '1px solid var(--color-storm-light)',
+                      color: 'var(--color-pale)',
+                    }}
+                  />
+                  <Button type="submit" variant="secondary" size="sm">Add</Button>
+                </form>
+              )}
+              {character.expertises.length === 0 ? (
+                <p className="text-sm" style={{ color: 'var(--color-fog)' }}>No expertises.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {character.expertises.map(e => (
+                    <div
+                      key={e.id}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded text-sm"
+                      style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)', color: 'var(--color-pale)' }}
+                    >
+                      {e.text}
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => store.removeExpertise(id, e.id)}
+                          className="text-xs hover:opacity-70"
+                          style={{ color: 'var(--color-fog)' }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {activeTab === 'equipment' && (
-          <div
-            className="rounded-lg p-4"
-            style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-gold)' }}>
-              Equipment
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--color-fog)' }}>
-              Equipment management — coming in Milestone 2.
-            </p>
-          </div>
+          <EquipmentPanel
+            character={character}
+            readOnly={readOnly}
+            onAddWeapon={w => store.addWeapon(id, w)}
+            onRemoveWeapon={wid => store.removeWeapon(id, wid)}
+            onAddArmour={a => store.addArmour(id, a)}
+            onRemoveArmour={aid => store.removeArmour(id, aid)}
+            onToggleArmour={aid => store.toggleArmourEquipped(id, aid)}
+            onAddEquipment={item => store.addEquipment(id, item)}
+            onRemoveEquipment={iid => store.removeEquipment(id, iid)}
+            onCurrencyChange={cur => store.setCurrency(id, cur)}
+          />
         )}
 
         {activeTab === 'narrative' && (
-          <div
-            className="rounded-lg p-4"
-            style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
-          >
-            <h3 className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: 'var(--color-gold)' }}>
-              Narrative
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--color-fog)' }}>
-              Goals, connections, and rewards — coming in Milestone 2.
-            </p>
-          </div>
+          <NarrativePanel
+            character={character}
+            readOnly={readOnly}
+            onAddGoal={g => store.addGoal(id, g)}
+            onRemoveGoal={gid => store.removeGoal(id, gid)}
+            onAddConnection={c => store.addConnection(id, c)}
+            onRemoveConnection={cid => store.removeConnection(id, cid)}
+            onRewardsChange={text => store.updateMeta(id, { rewards: text })}
+          />
         )}
       </div>
+
+      {/* Level Up Modal */}
+      <LevelUpModal
+        open={levelUpOpen}
+        character={character}
+        onClose={() => setLevelUpOpen(false)}
+        onApply={updated => store.applyUpdatedCharacter(updated)}
+      />
     </div>
   )
 }

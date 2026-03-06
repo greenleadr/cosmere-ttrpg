@@ -69,7 +69,7 @@ interface CharacterState {
   updateMeta: (id: string, updates: Partial<Pick<Character,
     'name' | 'playerName' | 'level' | 'ancestry' | 'cultures' |
     'heroicPaths' | 'radiantPath' | 'isRadiant' | 'occupation' | 'appearanceNotes' |
-    'rewards' | 'focusBonus' | 'investitureMax'
+    'rewards' | 'focusBonus' | 'investitureMax' | 'defenseOverrides'
   >>) => void
 
   // Attributes
