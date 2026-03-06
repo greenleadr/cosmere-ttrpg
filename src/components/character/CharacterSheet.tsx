@@ -14,6 +14,7 @@ import { EquipmentPanel } from './EquipmentPanel'
 import { NarrativePanel } from './NarrativePanel'
 import { LevelUpModal } from './LevelUpModal'
 import { CharacterIdentityPanel } from './CharacterIdentityPanel'
+import { TalentTreePanel } from './TalentTreePanel'
 import { Button } from '@/components/ui/Button'
 
 type Tab = 'details' | 'stats' | 'skills' | 'talents' | 'equipment' | 'narrative'
@@ -193,71 +194,8 @@ export function CharacterSheet({ character, readOnly = false }: CharacterSheetPr
 
         {activeTab === 'talents' && (
           <div className="flex flex-col gap-4">
-            <div
-              className="rounded-lg p-4"
-              style={{ background: 'var(--color-deep-storm)', border: '1px solid var(--color-storm-mid)' }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--color-gold)' }}>
-                  Talents
-                </h3>
-                {!readOnly && (
-                  <Button variant="ghost" size="sm" onClick={() => setLevelUpOpen(true)}>
-                    Level Up to Add
-                  </Button>
-                )}
-              </div>
-              {character.talents.length === 0 ? (
-                <p className="text-sm" style={{ color: 'var(--color-fog)' }}>No talents recorded.</p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {character.talents.map(t => (
-                    <div
-                      key={t.id}
-                      className="p-3 rounded"
-                      style={{ background: 'var(--color-storm)', border: '1px solid var(--color-storm-light)' }}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-sm" style={{ color: 'var(--color-gold-bright)' }}>
-                          {t.name}
-                        </span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded"
-                          style={{ background: 'var(--color-storm-mid)', color: 'var(--color-fog)' }}
-                        >
-                          {t.activationType}
-                        </span>
-                        {t.source && (
-                          <span className="text-xs" style={{ color: 'var(--color-fog)' }}>
-                            {t.source}
-                          </span>
-                        )}
-                      </div>
-                      {t.prerequisites && (
-                        <p className="text-xs mb-1" style={{ color: 'var(--color-fog)' }}>
-                          Prerequisites: {t.prerequisites}
-                        </p>
-                      )}
-                      {t.description && (
-                        <p className="text-xs" style={{ color: 'var(--color-pale)' }}>
-                          {t.description}
-                        </p>
-                      )}
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          onClick={() => store.removeTalent(id, t.id)}
-                          className="mt-2 text-xs hover:opacity-80"
-                          style={{ color: 'var(--color-health)' }}
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Heroic Path Talent Tree */}
+            <TalentTreePanel character={character} readOnly={readOnly} />
 
             {/* Expertises */}
             <div
